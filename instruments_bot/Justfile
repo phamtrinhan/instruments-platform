@@ -1,0 +1,16 @@
+
+fire:
+  git branch -m building-on-fire
+  git add .
+  git commit -m "building on fire, fast-commit"
+  git push origin building-on-fire
+  git branch -m main
+lib:
+  poetry install
+venv:
+  . venv/bin/activate
+master:
+  git branch -m main
+  git add .
+  git commit -m "building on fire, master, master!, fast-commit"
+  git push origin main

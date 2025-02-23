@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+  trino:
+    hostname: trino
+    image: 'trinodb/trino:351'
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./etc:/etc/trino
+    networks:
+      - trino-network
+
+  postgres:
+    hostname: postgres
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: metastore_db
+    networks:
+      - trino-network
+
+  hive-metastore:
+    hostname: hive-metastore
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '9083:9083'
+    volumes:
+      - ./conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+    environment:
+      METASTORE_TYPE: postgres
+      METASTORE_DB_HOSTNAME: postgres
+      METASTORE_DB_PORT: 5432
+    depends_on:
+      - postgres
+    networks:
+      - trino-network
+
+  minio:
+    hostname: minio
+    image: minio/minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9090:9090'
+    volumes:
+      - minio-data:/data
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    command: server /data --console-address ":9090"
+    networks:
+      - trino-network
+
+volumes:
+  minio-data:
+    driver: local
+
+networks:
+  trino-network:
+    driver: bridge
